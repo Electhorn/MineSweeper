@@ -86,17 +86,28 @@ export class DigitalDisplay {
    * This method handles window resize events gracefully
    */
   resize() {
-    const { ctx, width, height } = this.setupHiDpiCanvas(this.canvas);
-    this.ctx = ctx;
-    this.width = width;
-    this.height = height;
+  
 
-    // Clear cache since dimensions changed
-    this._segmentCache.clear();
-    this._lastDrawnValue = null;
+  const computedStyle = window.getComputedStyle(this.canvas);
+  const originalWidth = parseInt(computedStyle.width, 10) || this.canvas.clientWidth;
+  const originalHeight = parseInt(computedStyle.height, 10) || this.canvas.clientHeight;
+  
+  this.canvas.style.width = originalWidth + 'px';
+  this.canvas.style.height = originalHeight + 'px';
+  this.canvas.width = originalWidth;
+  this.canvas.height = originalHeight;
+  
+  
+  const { ctx, width, height } = this.setupHiDpiCanvas(this.canvas);
+  this.ctx = ctx;
+  this.width = width;
+  this.height = height;
 
-    this.display(this.currentValue);
-  }
+  this._segmentCache.clear();
+  this._lastDrawnValue = null;
+
+  this.display(this.currentValue);
+}
 
   /**
    * Define the geometric paths for each seven-segment display segment
