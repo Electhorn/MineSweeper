@@ -25,8 +25,8 @@ function handleResize() {
   if (!gameConfig) return;
 
   // 1. Resize digital displays first
-  mineCounterDisplay.resize();
-  timerDisplay.resize();
+ // mineCounterDisplay.resize();
+//  timerDisplay.resize();
 
   // 2. Re-setup the face canvas context
   const { ctx: newFaceCtx } = setupHiDpiCanvas(faceCanvas);
