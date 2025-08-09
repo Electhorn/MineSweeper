@@ -49,8 +49,8 @@ export function setupHiDpiCanvas(canvas) {
   canvas.height = height * dpr;
 
   // Set display dimensions
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
+//  canvas.style.width = `${width}px`;
+ // canvas.style.height = `${height}px`;
 
   // Get context and configure
   const ctx = canvas.getContext("2d");
