@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WinMine 3.1</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <div id="container">
+        <div id="menu-bar">
+            <div class="menu-item" id="menu-game">
+                <span><u>G</u>ame</span>
+                <div class="dropdown-menu">
+                    <div class="menu-option" data-difficulty="beginner" data-text="Beginner">✓ <u>B</u>eginner</div>
+                    <div class="menu-option" data-difficulty="intermediate" data-text="Intermediate">
+                        <u>I</u>ntermediate
+                    </div>
+                    <div class="menu-option" data-difficulty="expert" data-text="Expert"> <u>E</u>xpert</div>
+                    <div class="menu-separator"></div>
+                    <div class="menu-option" id="custom-difficulty-btn"> <u>C</u>ustom...</div>
+                    <div class="menu-separator"></div>
+                    <div class="menu-option" id="toggle-question-marks-btn">
+                        <!-- El ✓ (check) se añadirá o quitará con JavaScript -->
+                        Marks (?)
+                    </div>
+                </div>
+            </div>
+            <div class="menu-item" id="menu-help">
+                <span><u>H</u>elp</span>
+                <div class="dropdown-menu">
+                    <div class="menu-option" id="highscore-btn">High <u>S</u>cores...</div>
+                </div>
+            </div>
+            <!-- Podríamos añadir "Help" aquí en el futuro -->
+        </div>
+        <div id="ui-top">
+            <canvas id="mine-counter-canvas"></canvas>
+            <canvas id="face-canvas"></canvas>
+            <canvas id="timer-canvas"></canvas>
+        </div>
+
+        <!-- NUEVO CONTENEDOR PARA CENTRADO -->
+        <div class="canvas-wrapper">
+            <canvas id="minesweeper-canvas"></canvas>
+        </div>
+        <div id="custom-modal-overlay" class="modal-overlay hidden"> <!-- <-- CLASE AÑADIDA -->
+            <div id="custom-modal" class="win95-modal"> <!-- <-- CLASE AÑADIDA -->
+                <div class="modal-title-bar">
+                    <span>Custom Field</span>
+                    <button id="modal-close-btn" class="modal-close-button" aria-label="Cerrar">r</button>
+                </div>
+                <div class="modal-content">
+                    <label for="custom-height">Height:</label>
+                    <input type="number" id="custom-height" value="16" min="9" max="24">
+
+                    <label for="custom-width">Width:</label>
+                    <input type="number" id="custom-width" value="30" min="9" max="30">
+
+                    <label for="custom-mines">Mines:</label>
+                    <input type="number" id="custom-mines" value="99" min="10" max="668">
+
+                    <div class="modal-buttons">
+                        <button id="modal-ok-btn">OK</button>
+                        <button id="modal-cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="highscore-modal-overlay" class="modal-overlay hidden">
+            <div id="highscore-modal" class="win95-modal">
+                <div class="modal-title-bar">
+                    <span>High Scores</span>
+                    <button id="highscore-modal-close-btn" class="modal-close-button" aria-label="Cerrar">r</button>
+                </div>
+                <div class="modal-content">
+                    <div class="highscore-list">
+                        <p>Beginner: <span id="beginner-score">---</span> seconds</p>
+                        <p>Intermediate: <span id="intermediate-score">---</span> seconds</p>
+                        <p>Expert: <span id="expert-score">---</span> seconds</p>
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="reset-scores-btn">Reset Scores</button>
+                        <button id="highscore-modal-ok-btn">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

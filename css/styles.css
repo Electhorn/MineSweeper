@@ -1,0 +1,349 @@
+@import url('https://fonts.googleapis.com/css2?family=W95FA&display=swap');
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #008080;
+    font-family: "W95FA", "MS Sans Serif", sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#container {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: white #7b7b7b #7b7b7b white;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    max-width: 100vw;
+    max-height: 100vh;
+}
+
+.canvas-wrapper {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 0;
+    border: 2px solid;
+    border-color: #7b7b7b white white #7b7b7b;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#ui-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    margin-bottom: 10px;
+    border: 2px solid;
+    border-color: #7b7b7b white white #7b7b7b;
+}
+
+#minesweeper-canvas {
+    border: none;
+    display: block;
+    max-width: 100%;
+}
+
+#options {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+#mine-counter-canvas,
+#timer-canvas {
+    width: 52px;
+    height: 30px;
+    background-color: black;
+    border: 2px solid;
+    border-color: #7b7b7b white white #7b7b7b;
+}
+
+#face-canvas {
+    width: 30px;
+    height: 30px;
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: white #7b7b7b #7b7b7b white;
+    cursor: pointer;
+}
+
+#face-canvas:active {
+    border-color: #7b7b7b white white #7b7b7b;
+}
+
+#menu-bar {
+    background-color: #c0c0c0;
+    display: flex;
+    padding: 2px;
+    font-size: 13px;
+    user-select: none;
+}
+
+.menu-item {
+    position: relative;
+    padding: 2px 6px;
+}
+
+.menu-item:hover {
+    background-color: #000080;
+    color: white;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: white #7b7b7b #7b7b7b white;
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+    min-width: 150px;
+    z-index: 100;
+}
+
+.menu-item:hover .dropdown-menu {
+    display: block;
+}
+
+.menu-option {
+    padding: 4px 10px 4px 20px;
+    white-space: nowrap;
+}
+
+.menu-option:hover {
+    background-color: #000080;
+    color: white;
+}
+
+.menu-separator {
+    height: 1px;
+    background-color: #7b7b7b;
+    border-bottom: 1px solid white;
+    margin: 4px 2px;
+}
+
+u {
+    text-decoration: underline;
+}
+
+
+/* --- ESTILOS UNIFICADOS PARA TODOS LOS MODALES --- */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+.win95-modal {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: white #7b7b7b #7b7b7b white;
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.4);
+    min-width: 250px;
+}
+
+.modal-title-bar {
+    background-color: #000080;
+    color: white;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+.modal-close-button {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: white #7b7b7b #7b7b7b white;
+    width: 20px;
+    height: 20px;
+    font-family: "Webdings", "Wingdings";
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-close-button:active {
+    border-color: #7b7b7b white white #7b7b7b;
+}
+
+.modal-content {
+    padding: 15px;
+}
+
+/* Estilos específicos para el modal de Custom (Grid) */
+#custom-modal .modal-content {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+/* El contenido de Highscore no necesita grid */
+#highscore-modal .modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.highscore-list p {
+    margin: 0;
+}
+
+
+.modal-content input[type="number"] {
+    border: 2px inset #7b7b7b;
+    padding: 2px;
+}
+
+.modal-buttons {
+    /* grid-column fue movido a una regla específica de custom */
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#custom-modal .modal-buttons {
+    grid-column: 1 / -1; /* Solo aplica el grid a los botones del custom */
+}
+
+
+.modal-buttons button {
+    background-color: #c0c0c0;
+    border: 2px solid;
+    border-color: white #7b7b7b #7b7b7b white;
+    padding: 5px 15px;
+    min-width: 70px;
+}
+
+.modal-buttons button:active {
+    border-color: #7b7b7b white white #7b7b7b;
+}
+
+/* --- FIN DE ESTILOS DE MODAL --- */
+
+
+/* --- ESTILOS DE SCROLLBAR ESTILO WIN95 --- */
+
+.canvas-wrapper::-webkit-scrollbar {
+    width: 17px;
+}
+
+.canvas-wrapper::-webkit-scrollbar-track {
+    background-image: url("data:image/svg+xml,%3Csvg width='2' height='2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' x='0' y='0' fill='%23c0c0c0'/%3E%3Crect width='1' height='1' x='1' y='1' fill='%23c0c0c0'/%3E%3Crect width='1' height='1' x='1' y='0' fill='white'/%3E%3Crect width='1' height='1' x='0' y='1' fill='white'/%3E%3C/svg%3E");
+}
+
+.canvas-wrapper::-webkit-scrollbar-thumb {
+    background-color: #c0c0c0;
+    border-radius: 0;
+    border: 2px solid;
+    border-color: white #7b7b7b #7b7b7b white;
+}
+
+.canvas-wrapper::-webkit-scrollbar-button {
+    background-color: #c0c0c0;
+    border-radius: 0;
+    border: 2px solid;
+    border-color: white #7b7b7b #7b7b7b white;
+    display: block;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.canvas-wrapper::-webkit-scrollbar-button:active {
+    border-color: #7b7b7b white white #7b7b7b;
+}
+
+.canvas-wrapper::-webkit-scrollbar-button:vertical:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M6 3L2 8h8L6 3z' fill='black'/%3E%3C/svg%3E");
+}
+
+.canvas-wrapper::-webkit-scrollbar-button:vertical:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M6 9L2 4h8L6 9z' fill='black'/%3E%3C/svg%3E");
+}
+
+
+@media (max-width: 600px) {
+
+    body,
+    #container {
+        padding: 5px;
+    }
+
+    #ui-top {
+        padding: 5px;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    #mine-counter-canvas,
+    #timer-canvas {
+        width: auto;
+        flex: 1 1 0;
+        height: 8vw;
+        max-height: 40px;
+    }
+
+    #face-canvas {
+        width: 8vw;
+        height: 8vw;
+        max-width: 40px;
+        max-height: 40px;
+        flex-shrink: 0;
+    }
+
+    .win95-modal { /* Aplicamos a la clase genérica */
+        width: 90%;
+        min-width: 0;
+    }
+
+    .modal-content {
+        font-size: 1.1rem;
+        gap: 15px;
+    }
+
+    .modal-content input[type="number"] {
+        padding: 10px;
+        font-size: 1.1rem;
+    }
+
+    .modal-buttons button {
+        padding: 12px 20px;
+        font-size: 1.1rem;
+    }
+
+    .canvas-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+}
