@@ -2,6 +2,7 @@ const input = (() => {
   // Constants
   const LONG_PRESS_DURATION = 400;
   const DOUBLE_TAP_DELAY = 300;
+  const DOUBLE_TAP_TOLERANCE = 10; // Tolerance in pixels for double tap
   const MOUSE_BUTTONS = {
     LEFT: 0,
     MIDDLE: 1,
@@ -11,29 +12,36 @@ const input = (() => {
   // State variables
   let canvas = null;
   let faceCanvas = null;
-  let config = { cellSize: 16 };
+  let config = {
+    cellSize: 16,
+    gameType: "generic", // 'minesweeper', 'arkanoid', 'solitaire', 'generic'
+  };
 
   const callbacks = {
     onLeftClick: null,
     onRightClick: null,
+    onMiddleClick: null,
     onChordClick: null,
     onReset: null,
     onPress: null,
     onRelease: null,
+    onMouseMove: null,
+    onKeyDown: null,
+    onKeyUp: null,
   };
 
   let isLeftMouseDown = false;
   let isRightMouseDown = false;
-  let isMouseOverCanvas = false;
+  let isMiddleMouseDown = false;
 
   let touchTimer = null;
-  let lastTap = { time: 0, r: -1, c: -1 };
+  let lastTap = { time: 0, x: -1, y: -1 };
   let longPressOccurred = false;
 
   /**
-   * Calculates grid coordinates from mouse/touch event
+   * Calculates coordinates from mouse/touch event
    * @param {Event} event - Mouse or touch event
-   * @returns {Object|null} Row and column coordinates or null if invalid
+   * @returns {Object|null} X and Y coordinates or null if invalid
    */
   function _getCoordsFromEvent(event) {
     if (!canvas) return null;
@@ -53,10 +61,34 @@ const input = (() => {
       return null;
     }
 
-    const c = Math.floor(x / config.cellSize);
-    const r = Math.floor(y / config.cellSize);
+    return { x, y };
+  }
 
-    return { r, c };
+  /**
+   * Calculates grid coordinates from mouse/touch event (for grid-based games)
+   * @param {Event} event - Mouse or touch event
+   * @returns {Object|null} Row and column coordinates or null if invalid
+   */
+  function _getGridCoordsFromEvent(event) {
+    const coords = _getCoordsFromEvent(event);
+    if (!coords) return null;
+
+    const c = Math.floor(coords.x / config.cellSize);
+    const r = Math.floor(coords.y / config.cellSize);
+
+    return { r, c, x: coords.x, y: coords.y };
+  }
+
+  /**
+   * Gets appropriate coordinates based on game type
+   * @param {Event} event - Mouse or touch event
+   * @returns {Object|null} Coordinates object
+   */
+  function _getCoords(event) {
+    if (config.gameType === "minesweeper" || config.gameType === "generic") {
+      return _getGridCoordsFromEvent(event);
+    }
+    return _getCoordsFromEvent(event);
   }
 
   /**
@@ -78,14 +110,13 @@ const input = (() => {
         isRightMouseDown = true;
         break;
       case MOUSE_BUTTONS.MIDDLE:
-        isLeftMouseDown = true;
-        isRightMouseDown = true;
+        isMiddleMouseDown = true;
         break;
     }
 
-    const pos = _getCoordsFromEvent(event);
+    const pos = _getCoords(event);
     if (pos && callbacks.onPress) {
-      callbacks.onPress(pos.r, pos.c);
+      callbacks.onPress(pos);
     }
   }
 
@@ -94,7 +125,20 @@ const input = (() => {
    * @param {MouseEvent} event - Mouse event
    */
   function _handleMouseUp(event) {
-    const pos = _getCoordsFromEvent(event);
+    const pos = _getCoords(event);
+
+    // Handle specific button releases
+    if (event.button === MOUSE_BUTTONS.MIDDLE && isMiddleMouseDown) {
+      isMiddleMouseDown = false;
+      if (callbacks.onRelease) {
+        callbacks.onRelease();
+      }
+      if (callbacks.onMiddleClick) {
+        callbacks.onMiddleClick(pos);
+      }
+      return;
+    }
+
     const wasLeftDown = isLeftMouseDown;
     const wasRightDown = isRightMouseDown;
 
@@ -106,10 +150,6 @@ const input = (() => {
       case MOUSE_BUTTONS.RIGHT:
         isRightMouseDown = false;
         break;
-      case MOUSE_BUTTONS.MIDDLE:
-        isLeftMouseDown = false;
-        isRightMouseDown = false;
-        break;
     }
 
     // Notify release
@@ -119,15 +159,17 @@ const input = (() => {
 
     // Handle click actions
     if (pos) {
-      if (
-        (wasLeftDown && wasRightDown) ||
-        event.button === MOUSE_BUTTONS.MIDDLE
-      ) {
-        if (callbacks.onChordClick) callbacks.onChordClick(pos.r, pos.c);
-      } else if (event.button === MOUSE_BUTTONS.LEFT && wasLeftDown) {
-        if (callbacks.onLeftClick) callbacks.onLeftClick(pos.r, pos.c);
-      } else if (event.button === MOUSE_BUTTONS.RIGHT && wasRightDown) {
-        if (callbacks.onRightClick) callbacks.onRightClick(pos.r, pos.c);
+      // Chording (both left and right buttons held)
+      if (wasLeftDown && wasRightDown) {
+        if (callbacks.onChordClick) callbacks.onChordClick(pos);
+      }
+      // Left click
+      else if (event.button === MOUSE_BUTTONS.LEFT && wasLeftDown) {
+        if (callbacks.onLeftClick) callbacks.onLeftClick(pos);
+      }
+      // Right click
+      else if (event.button === MOUSE_BUTTONS.RIGHT && wasRightDown) {
+        if (callbacks.onRightClick) callbacks.onRightClick(pos);
       }
     }
   }
@@ -137,14 +179,22 @@ const input = (() => {
    * @param {MouseEvent} event - Mouse event
    */
   function _handleMouseMove(event) {
-    if (!isLeftMouseDown && !isRightMouseDown) return;
+    if (!isLeftMouseDown && !isRightMouseDown && !isMiddleMouseDown) return;
     event.preventDefault();
 
-    const pos = _getCoordsFromEvent(event);
+    const pos = _getCoords(event);
     if (pos && callbacks.onPress) {
-      callbacks.onPress(pos.r, pos.c);
+      callbacks.onPress(pos);
     } else if (callbacks.onRelease) {
       callbacks.onRelease();
+    }
+
+    // Always notify mouse move for games that need it (like Arkanoid)
+    if (callbacks.onMouseMove) {
+      const coords = _getCoordsFromEvent(event);
+      if (coords) {
+        callbacks.onMouseMove(coords);
+      }
     }
   }
 
@@ -157,6 +207,7 @@ const input = (() => {
     }
     isLeftMouseDown = false;
     isRightMouseDown = false;
+    isMiddleMouseDown = false;
   }
 
   /**
@@ -167,18 +218,18 @@ const input = (() => {
     event.preventDefault();
     longPressOccurred = false;
 
-    const pos = _getCoordsFromEvent(event);
+    const pos = _getCoords(event);
     if (!pos) return;
 
     if (callbacks.onPress) {
-      callbacks.onPress(pos.r, pos.c);
+      callbacks.onPress(pos);
     }
 
     // Setup long press detection
     touchTimer = setTimeout(() => {
       longPressOccurred = true;
       if (callbacks.onRightClick) {
-        callbacks.onRightClick(pos.r, pos.c);
+        callbacks.onRightClick(pos);
       }
       if (callbacks.onRelease) {
         callbacks.onRelease();
@@ -201,25 +252,25 @@ const input = (() => {
       return;
     }
 
-    const pos = _getCoordsFromEvent(event);
+    const pos = _getCoords(event);
     if (!pos) return;
 
     const currentTime = Date.now();
     const isDoubleTap =
       currentTime - lastTap.time < DOUBLE_TAP_DELAY &&
-      pos.r === lastTap.r &&
-      pos.c === lastTap.c;
+      Math.abs(pos.x - lastTap.x) < DOUBLE_TAP_TOLERANCE &&
+      Math.abs(pos.y - lastTap.y) < DOUBLE_TAP_TOLERANCE;
 
     if (isDoubleTap) {
       if (callbacks.onChordClick) {
-        callbacks.onChordClick(pos.r, pos.c);
+        callbacks.onChordClick(pos);
       }
-      lastTap = { time: 0, r: -1, c: -1 };
+      lastTap = { time: 0, x: -1, y: -1 };
     } else {
       if (callbacks.onLeftClick) {
-        callbacks.onLeftClick(pos.r, pos.c);
+        callbacks.onLeftClick(pos);
       }
-      lastTap = { time: currentTime, r: pos.r, c: pos.c };
+      lastTap = { time: currentTime, x: pos.x, y: pos.y };
     }
   }
 
@@ -229,6 +280,14 @@ const input = (() => {
    */
   function _handleTouchMove(event) {
     clearTimeout(touchTimer);
+
+    // Notify mouse move for touch drag (useful for games like Arkanoid)
+    if (callbacks.onMouseMove) {
+      const coords = _getCoordsFromEvent(event);
+      if (coords) {
+        callbacks.onMouseMove(coords);
+      }
+    }
   }
 
   /**
@@ -240,7 +299,7 @@ const input = (() => {
   }
 
   /**
-   * Handles face button click
+   * Handles face button click (for Minesweeper-style reset)
    */
   function _handleFaceClick() {
     if (callbacks.onReset) callbacks.onReset();
@@ -251,15 +310,32 @@ const input = (() => {
    * @param {KeyboardEvent} event - Keyboard event
    */
   function _handleKeyDown(event) {
+    // F2 for reset (common in Minesweeper)
     if (event.key === "F2" && callbacks.onReset) {
       callbacks.onReset();
+      return;
+    }
+
+    // Notify custom key handlers
+    if (callbacks.onKeyDown) {
+      callbacks.onKeyDown(event);
+    }
+  }
+
+  /**
+   * Handles keyboard up events
+   * @param {KeyboardEvent} event - Keyboard event
+   */
+  function _handleKeyUp(event) {
+    if (callbacks.onKeyUp) {
+      callbacks.onKeyUp(event);
     }
   }
 
   /**
    * Initializes input handlers
    * @param {HTMLCanvasElement} canvasElement - Game canvas
-   * @param {HTMLCanvasElement} faceCanvasElement - Face canvas
+   * @param {HTMLCanvasElement} [faceCanvasElement] - Face canvas (optional)
    * @param {Object} options - Configuration options
    */
   function init(canvasElement, faceCanvasElement, options) {
@@ -280,16 +356,23 @@ const input = (() => {
       passive: false,
     });
     canvas.addEventListener("touchend", _handleTouchEnd);
-    canvas.addEventListener("touchmove", _handleTouchMove);
-    faceCanvas.addEventListener("click", _handleFaceClick);
+    canvas.addEventListener("touchmove", _handleTouchMove, {
+      passive: false,
+    });
+
+    if (faceCanvas) {
+      faceCanvas.addEventListener("click", _handleFaceClick);
+    }
+
     window.addEventListener("keydown", _handleKeyDown);
+    window.addEventListener("keyup", _handleKeyUp);
   }
 
   /**
    * Removes all event listeners
    */
   function _removeEventListeners() {
-    if (!canvas || !faceCanvas) return;
+    if (!canvas) return;
 
     canvas.removeEventListener("mousedown", _handleMouseDown);
     canvas.removeEventListener("mouseup", _handleMouseUp);
@@ -300,9 +383,16 @@ const input = (() => {
       passive: false,
     });
     canvas.removeEventListener("touchend", _handleTouchEnd);
-    canvas.removeEventListener("touchmove", _handleTouchMove);
-    faceCanvas.removeEventListener("click", _handleFaceClick);
+    canvas.removeEventListener("touchmove", _handleTouchMove, {
+      passive: false,
+    });
+
+    if (faceCanvas) {
+      faceCanvas.removeEventListener("click", _handleFaceClick);
+    }
+
     window.removeEventListener("keydown", _handleKeyDown);
+    window.removeEventListener("keyup", _handleKeyUp);
   }
 
   /**
@@ -325,26 +415,105 @@ const input = (() => {
 
   // Public API
   return {
+    /**
+     * Initializes the input handler with the given canvas and options.
+     * @param {HTMLCanvasElement} canvasElement - The main canvas element for input detection.
+     * @param {HTMLCanvasElement} [faceCanvasElement] - An optional secondary canvas (e.g., a reset button).
+     * @param {Object} [options] - Configuration options.
+     * @param {number} [options.cellSize] - The size of a grid cell for grid-based games.
+     * @param {string} [options.gameType] - The type of game to adjust coordinate calculation.
+     */
     init,
+
+    /**
+     * Updates configuration options
+     * @param {Object} newOptions - New configuration options
+     */
     updateConfig,
+
+    /**
+     * Cleanup function to remove all event listeners
+     */
     destroy,
+
+    /**
+     * Registers a callback for a left-click or single-tap event.
+     * @param {function(object): void} cb - The callback function. Receives a coordinates object {r, c, x, y}.
+     */
     onLeftClick: (cb) => {
       callbacks.onLeftClick = cb;
     },
+
+    /**
+     * Registers a callback for a right-click or long-press event.
+     * @param {function(object): void} cb - The callback function. Receives a coordinates object {r, c, x, y}.
+     */
     onRightClick: (cb) => {
       callbacks.onRightClick = cb;
     },
+
+    /**
+     * Registers a callback for a middle-click event.
+     * @param {function(object): void} cb - The callback function. Receives a coordinates object {r, c, x, y}.
+     */
+    onMiddleClick: (cb) => {
+      callbacks.onMiddleClick = cb;
+    },
+
+    /**
+     * Registers a callback for a chord-click (both buttons or double tap) event.
+     * @param {function(object): void} cb - The callback function. Receives a coordinates object {r, c, x, y}.
+     */
     onChordClick: (cb) => {
       callbacks.onChordClick = cb;
     },
+
+    /**
+     * Registers a callback for a reset event (F2 key or face click).
+     * @param {function(): void} cb - The callback function.
+     */
     onReset: (cb) => {
       callbacks.onReset = cb;
     },
+
+    /**
+     * Registers a callback for when a press begins (mousedown or touchstart).
+     * @param {function(object): void} cb - The callback function. Receives a coordinates object {r, c, x, y}.
+     */
     onPress: (cb) => {
       callbacks.onPress = cb;
     },
+
+    /**
+     * Registers a callback for when a press ends (mouseup or touchend).
+     * @param {function(): void} cb - The callback function.
+     */
     onRelease: (cb) => {
       callbacks.onRelease = cb;
+    },
+
+    /**
+     * Registers a callback for mouse move events.
+     * @param {function(object): void} cb - The callback function. Receives a coordinates object {x, y}.
+     */
+    onMouseMove: (cb) => {
+      callbacks.onMouseMove = cb;
+    },
+
+    /**
+     * Registers a callback for key down events.
+     * @param {function(KeyboardEvent): void} cb - The callback function. Receives the KeyboardEvent.
+     */
+    onKeyDown: (cb) => {
+      callbacks.onKeyDown = cb;
+    },
+
+    /**
+     * Registers a callback for key up events.
+     * @param {function(KeyboardEvent): void} cb - The callback function. Receives the KeyboardEvent.
+     */
+    onKeyUp: (cb) => {
+      callbacks.onKeyUp = cb;
     },
   };
 })();

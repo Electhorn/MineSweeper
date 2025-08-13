@@ -97,23 +97,26 @@ function redrawGameState() {
  * concrete game actions (from gameController.js).
  */
 function bindInputEvents() {
-  input.onLeftClick((r, c) =>
+  // Nota el cambio a ({ r, c }) para desestructurar el objeto `pos`
+  input.onLeftClick(({ r, c }) =>
     gameController.handleLeftClick(r, c, timerDisplay)
   );
 
-  input.onRightClick((r, c) =>
+  input.onRightClick(({ r, c }) =>
     gameController.handleRightClick(r, c, mineCounterDisplay)
   );
 
-  input.onChordClick((r, c) => gameController.handleChord(r, c));
+  input.onChordClick(({ r, c }) => gameController.handleChord(r, c));
 
   input.onReset(() =>
     gameController.resetGame(mineCounterDisplay, timerDisplay)
   );
 
-  input.onPress((r, c) => gameController.handleCellPress(r, c));
+  input.onPress(({ r, c }) => gameController.handleCellPress(r, c));
 
   input.onRelease(() => gameController.handleCellRelease());
+
+  input.onMiddleClick(({ r, c }) => gameController.handleChord(r, c));
 }
 
 /**
